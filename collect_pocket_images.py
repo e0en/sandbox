@@ -14,11 +14,11 @@ TAG = sys.argv[1]
 # twitter api info
 if not os.path.exists('private/.twitter_credentials'):
     twitter.oauth_dance("e0en's image downloader", twitter_consumer_key,
-            twitter_consumer_secret, '.twitter_credentials')
+                        twitter_consumer_secret, '.twitter_credentials')
 oauth_token, oauth_secret = twitter.read_token_file('.twitter_credentials')
 twitter_instance = twitter.Twitter(
-        auth=twitter.OAuth(oauth_token, oauth_secret, twitter_consumer_key,
-            twitter_consumer_secret))
+    auth=twitter.OAuth(oauth_token, oauth_secret, twitter_consumer_key,
+                       twitter_consumer_secret))
 twitter_api_url = 'https://api.twitter.com/1.1/statuses/show.json'
 
 
@@ -30,8 +30,9 @@ if access_token is None:
     request_token = response.text.split('=')[1]
 
     # authorize my app on browser
-    url = ('https://getpocket.com/auth/authorize?request_token=%s&redirect_uri=%s'
-            % (request_token, redirect_uri))
+    url = (
+        'https://getpocket.com/auth/authorize?request_token=%s&redirect_uri=%s' %
+        (request_token, redirect_uri))
     print 'please open this url on your browser'
 
     # obtain access token
@@ -54,7 +55,7 @@ else:
                 for x in images:
                     image_url = x['media_url_https']
                     filename = 'twitter_%s_%s' % (tweet_id,
-                            image_url.split('/')[-1])
+                                                  image_url.split('/')[-1])
                     r_image = requests.get(image_url, stream=True)
                     with open(filename, 'wb') as fp:
                         fp.write(r_image.raw.read())
