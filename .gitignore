@@ -54,3 +54,6 @@ docs/_build/
 
 # Things i want to keep private
 private/
+
+# nohup output
+nohup.out
