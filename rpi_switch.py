@@ -29,12 +29,12 @@ if __name__ == '__main__':
 
     channel = 29
 
-    is_locked(channel)
-
     GPIO.setmode(GPIO.BOARD)
     GPIO.setup(channel, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-    GPIO.add_event_detect(channel, GPIO.BOTH, callback=print_msg)
 
+    is_locked(channel)
+
+    GPIO.add_event_detect(channel, GPIO.BOTH, callback=print_msg)
     while True:
         pass
 
