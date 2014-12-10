@@ -24,6 +24,8 @@ def set_status(status):
         IS_AVAILABLE = True
     elif status == 0:
         IS_AVAILABLE = False
+    elif status == -1:
+        IS_AVAILABLE = None
     return 'OK'
 
 if __name__ == '__main__':
