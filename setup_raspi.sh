@@ -16,6 +16,7 @@ sudo pip install virtualenvwrapper
 git config --global user.name "Yoonseop Kang"
 git config --global user.email e0engoon@gmail.com
 git config --global core.editor vim
+git config --global push.default simple
 
 ssh-keygen -t rsa -C "e0engoon@gmail.com"
 cat ~/.ssh/id_rsa.pub  # add this result to github settings
