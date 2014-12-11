@@ -17,6 +17,7 @@ git config --global user.name "Yoonseop Kang"
 git config --global user.email e0engoon@gmail.com
 git config --global core.editor vim
 git config --global push.default simple
+git config --global color.ui always
 
 ssh-keygen -t rsa -C "e0engoon@gmail.com"
 cat ~/.ssh/id_rsa.pub  # add this result to github settings
