@@ -37,6 +37,7 @@ if __name__ == '__main__':
     GPIO.setup(channel, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
     send_status(channel)
+    send_alive()
 
     GPIO.add_event_detect(channel, GPIO.BOTH, callback=send_status)
     while True:
