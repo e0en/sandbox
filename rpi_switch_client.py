@@ -23,6 +23,11 @@ def is_locked(channel):
     return GPIO.input(channel)
 
 
+def send_alive():
+    time_str = datetime.utcnow().isoformat()
+    url = EC2_URL + ('/alive/%s' % time_str)
+    urllib2.urlopen(url)
+
 if __name__ == '__main__':
     print 'Sending switch status to %s' % EC2_URL
 
@@ -35,7 +40,8 @@ if __name__ == '__main__':
 
     GPIO.add_event_detect(channel, GPIO.BOTH, callback=send_status)
     while True:
-        time.sleep(1)
+        time.sleep(30)
         # TODO: send alive-message every minute
+        send_alive()
 
     GPIO.cleanup()
