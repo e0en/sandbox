@@ -55,3 +55,6 @@ docs/_build/
 # Things i want to keep private
 private/
 !/private/README.md
+
+# nohup output
+nohup.out
