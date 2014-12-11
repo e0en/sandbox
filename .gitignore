@@ -58,3 +58,6 @@ private/
 
 # nohup output
 nohup.out
+
+# binary files
+*.db
