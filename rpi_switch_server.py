@@ -34,6 +34,26 @@ class ToiletLog(db.Model):
         return self.__repr__()
 
 
+class ToiletClientAliveLog(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    time = db.Column(db.DateTime)  # in UTC time
+    send_time = db.Column(db.DateTime)  # in UTC time
+
+    def __init__(self, send_time):
+        self.time = datetime.utcnow()
+        self.send_time = send_time
+
+    def __repr__(self):
+        return '<Client Alive Log: %s>' % self.time.isoformat()
+
+    def __str__(self):
+        return self.__repr__()
+
+
+def seconds_since_log(log):
+    return int(datetime.utcnow() - log.time)
+
+
 @app.route('/init_db/')
 def init_db():
     db.create_all()
@@ -42,14 +62,23 @@ def init_db():
 
 @app.route('/')
 def index():
-    first_log = ToiletLog.query.order_by('-id').first()
-    if first_log is None:
-        return 'Not recorded yet :('
-    elif first_log.is_open:
-        return "Door is open"
+    last_log = ToiletLog.query.order_by('-id').first()
+    last_alive_log = ToiletClientAliveLog.query.order_by('-id').first()
+
+    msg_str = ''
+    if last_log is None:
+        msg_str += 'Not recorded yet :('
+    elif last_log.is_open:
+        msg_str += "Door is open"
     else:
-        locked_minutes = (datetime.utcnow() - first_log.time).seconds / 60
-        return "Door is locked for %d minutes" % locked_minutes
+        locked_minutes = seconds_since_log(last_log) / 60
+        msg_str += "Door is locked for %d minutes" % locked_minutes
+
+    if last_alive_log is not None:
+        alive_seconds = seconds_since_log(last_alive_log)
+        msg_str += '<br />last alive msg %d seconds ago' % alive_seconds
+
+    return msg_str
 
 
 @app.route('/register/<int:status>/<string:send_time_str>')
@@ -59,6 +88,16 @@ def set_status(status, send_time_str):
         new_log = ToiletLog(True, send_time)
     elif status == 0:
         new_log = ToiletLog(False, send_time)
+
+    db.session.add(new_log)
+    db.session.commit()
+    return 'OK'
+
+
+@app.route('/client_alive/<string:send_time_str>')
+def client_alive(send_time_str):
+    send_time = dateutil.parser.parse(send_time_str)
+    new_log = ToiletClientAliveLog(send_time)
 
     db.session.add(new_log)
     db.session.commit()
