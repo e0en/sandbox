@@ -28,4 +28,6 @@ source ~/.bash_profile
 echo "source ~/dotfiles/vimrc" > ~/.vimrc
 vim +PluginUpdate +qall
 
-# setup wifi
+# setup wifi: http://www.rasplay.org/?p=5996
+# add this line below line to sudo crontab
+# @reboot python /home/pi/snippets/rpi_switch_client.py
