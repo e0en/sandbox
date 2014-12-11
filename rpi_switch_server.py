@@ -51,7 +51,7 @@ class ToiletClientAliveLog(db.Model):
 
 
 def seconds_since_log(log):
-    return int(datetime.utcnow() - log.time)
+    return (datetime.utcnow() - log.time).seconds
 
 
 @app.route('/init_db/')
@@ -114,7 +114,6 @@ def show_log():
         log_str += '[sent: %s]' % log.send_time.isoformat()
         log_str += '[received: %s]' % log.time.isoformat()
         log_str += '<br />\n'
-    print log_str
     return log_str
 
 
