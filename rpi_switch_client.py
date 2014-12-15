@@ -10,17 +10,27 @@ from private import EC2_URL
 
 
 def send_status(channel):
-    status_id = 0 if is_locked(channel) else 1
+    try:
+        status_id = 0 if is_locked(channel) else 1
 
-    # TODO: handle server/network errors
-    time_str = datetime.utcnow().isoformat()
-    url = EC2_URL + ('/register/%d/%s' % (status_id, time_str))
-    print url
-    urllib2.urlopen(url)
+        time_str = datetime.utcnow().isoformat()
+        url = EC2_URL + ('/register/%d/%s' % (status_id, time_str))
+        urllib2.urlopen(url)
+    except urllib2.URLError:
+        print 'Server or network is down'
 
 
 def is_locked(channel):
     return GPIO.input(channel)
+
+
+def send_alive():
+    try:
+        time_str = datetime.utcnow().isoformat()
+        url = EC2_URL + ('/client_alive/%s' % time_str)
+        urllib2.urlopen(url)
+    except urllib2.URLError:
+        print 'Server or network is down'
 
 
 if __name__ == '__main__':
@@ -32,10 +42,11 @@ if __name__ == '__main__':
     GPIO.setup(channel, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
 
     send_status(channel)
+    send_alive()
 
     GPIO.add_event_detect(channel, GPIO.BOTH, callback=send_status)
     while True:
-        time.sleep(1)
-        # TODO: send alive-message every minute
+        time.sleep(30)
+        send_alive()
 
     GPIO.cleanup()
