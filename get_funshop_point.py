@@ -17,11 +17,12 @@ def get_funshop_emails():
 
     # fetch unread mails in inbox sent from funshop
     _, data = mail_client.search(None, '(FROM "no_reply@funshop.co.kr")')
-    for num in data[0].split():
-        _, raw_message = mail_client.fetch(num, '(RFC822)')
+    for mail_id in data[0].split():
+        _, raw_message = mail_client.fetch(mail_id, '(RFC822)')
         message = email.message_from_string(raw_message[0][1])
         content = message.get_payload(decode=True)
         yield content
+        # TODO: mark the email as read
 
 
 def get_delivery_point_urls(content):
