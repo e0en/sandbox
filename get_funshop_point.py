@@ -5,6 +5,7 @@ import email
 import imaplib
 import re
 import mechanize
+import os
 
 
 def get_funshop_emails():
@@ -54,7 +55,10 @@ def get_delivery_point(url):
 
 
 if __name__ == '__main__':
+    dir_here = os.path.dirname(os.path.realpath(__file__))
+    filename = os.path.join(dir_here, 'private/funshop_result.txt')
     for content in get_funshop_emails():
         url = get_delivery_point_urls(content)
         is_success = get_delivery_point(url)
-        print is_success
+        with open(filename, 'a') as fp:
+            fp.write('%s\n' % is_success)
