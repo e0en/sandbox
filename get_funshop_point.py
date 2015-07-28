@@ -1,29 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import private
-import email
-import imaplib
+from gmail import Gmail
+import os
+import time
 import re
 import mechanize
-import os
-
-
-def get_funshop_emails():
-    # connect to gmail
-    mail_client = imaplib.IMAP4_SSL('imap.gmail.com')
-    mail_client.login('e0engoon@gmail.com', private.GMAIL_PASSWORD)
-
-    rv, mailboxes = mail_client.list()
-    mail_client.select()
-
-    # fetch unread mails in inbox sent from funshop
-    _, data = mail_client.search(None, '(FROM "no_reply@funshop.co.kr")')
-    for mail_id in data[0].split():
-        _, raw_message = mail_client.fetch(mail_id, '(RFC822)')
-        message = email.message_from_string(raw_message[0][1])
-        content = message.get_payload(decode=True)
-        yield content
-        # TODO: mark the email as read
+import private
 
 
 def get_delivery_point_urls(content):
@@ -57,8 +39,21 @@ def get_delivery_point(url):
 if __name__ == '__main__':
     dir_here = os.path.dirname(os.path.realpath(__file__))
     filename = os.path.join(dir_here, 'private/funshop_result.txt')
-    for content in get_funshop_emails():
+    g = Gmail()
+    while not g.logged_in:
+        time.sleep(1)
+        g.login(private.GMAIL_ID, private.GMAIL_PASSWORD)
+    mails = g.inbox().mail(unread=True, sender='no_reply@funshop.co.kr')
+
+    for m in mails:
+        m.fetch()
+        content = m.message.get_payload(decode=True)
         url = get_delivery_point_urls(content)
         is_success = get_delivery_point(url)
         with open(filename, 'a') as fp:
             fp.write('%s\n' % is_success)
+        if is_success:
+            m.read()
+            m.archive()
+
+    g.logout()
