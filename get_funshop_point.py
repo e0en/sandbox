@@ -55,5 +55,7 @@ if __name__ == '__main__':
         if is_success:
             m.read()
             m.archive()
+            m.remove_label("Inbox")
+
 
     g.logout()
