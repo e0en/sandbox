@@ -3,6 +3,7 @@
 from gmail import Gmail
 import os
 import time
+import datetime
 import re
 import mechanize
 import private
@@ -24,7 +25,7 @@ def get_delivery_point(url):
 
     # log-in to funshop
     for i_form, form in enumerate(browser.forms()):
-        if form.attrs['id'] == 'frmlogin':
+        if form.attrs['id'].lower() == 'frmlogin':
             break
     browser.select_form(nr=i_form)
     browser['Account'] = 'e0en'
@@ -43,7 +44,9 @@ if __name__ == '__main__':
     while not g.logged_in:
         time.sleep(1)
         g.login(private.GMAIL_ID, private.GMAIL_PASSWORD)
+    print("logged in!")
     mails = g.inbox().mail(unread=True, sender='no_reply@funshop.co.kr')
+    print("total %d unread mails from funshop" % len(mails))
 
     for m in mails:
         m.fetch()
@@ -51,9 +54,12 @@ if __name__ == '__main__':
         url = get_delivery_point_urls(content)
         is_success = get_delivery_point(url)
         with open(filename, 'a') as fp:
-            fp.write('%s\n' % is_success)
+            fp.write('%s: %s\n' % (datetime.datetime.now().isoformat(), is_success))
         if is_success:
             m.read()
             m.archive()
             m.remove_label("\\\\Important")
+    if len(mails) == 0:
+        with open(filename, 'a') as fp:
+            fp.write('%s: no mail\n' % datetime.datetime.now().isoformat())
     g.logout()
