@@ -5,22 +5,21 @@ import time
 import requests
 import pocket
 import twitter
-
 from private.keys import *
 
 
 TAG = sys.argv[1]
 
+
 # twitter api info
 if not os.path.exists('private/.twitter_credentials'):
     twitter.oauth_dance("e0en's image downloader", twitter_consumer_key,
-                        twitter_consumer_secret, '.twitter_credentials')
-oauth_token, oauth_secret = twitter.read_token_file('.twitter_credentials')
+                        twitter_consumer_secret, 'private/.twitter_credentials')
+oauth_token, oauth_secret = twitter.read_token_file('private/.twitter_credentials')
 twitter_instance = twitter.Twitter(
     auth=twitter.OAuth(oauth_token, oauth_secret, twitter_consumer_key,
                        twitter_consumer_secret))
 twitter_api_url = 'https://api.twitter.com/1.1/statuses/show.json'
-
 
 if access_token is None:
     # get a request token
@@ -34,12 +33,14 @@ if access_token is None:
         'https://getpocket.com/auth/authorize?request_token=%s&redirect_uri=%s' %
         (request_token, redirect_uri))
     print('please open this url on your browser')
+    print(url)
+    input("When completed, press <enter>")
 
     # obtain access token
     url = 'https://getpocket.com/v3/oauth/authorize'
     payload = {'consumer_key': consumer_key, 'code': request_token, }
     response = requests.post(url, payload)
-    access_token = response.text.split('=')[1]
+    access_token = response.text.split('=')[1].split('&')[0]
     print(access_token)
 else:
     instance = pocket.Pocket(consumer_key, access_token)
