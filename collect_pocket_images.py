@@ -33,14 +33,14 @@ if access_token is None:
     url = (
         'https://getpocket.com/auth/authorize?request_token=%s&redirect_uri=%s' %
         (request_token, redirect_uri))
-    print 'please open this url on your browser'
+    print('please open this url on your browser')
 
     # obtain access token
     url = 'https://getpocket.com/v3/oauth/authorize'
     payload = {'consumer_key': consumer_key, 'code': request_token, }
     response = requests.post(url, payload)
     access_token = response.text.split('=')[1]
-    print access_token
+    print(access_token)
 else:
     instance = pocket.Pocket(consumer_key, access_token)
     items = instance.get(tag=TAG, since=0, state='all')[0]['list']
@@ -59,11 +59,11 @@ else:
                     r_image = requests.get(image_url, stream=True)
                     with open(filename, 'wb') as fp:
                         fp.write(r_image.raw.read())
-                    print image_url
-                    print 'downloaded %s' % filename
+                    print(image_url)
+                    print('downloaded %s' % filename)
                     time.sleep(0.1)
 
             except twitter.api.TwitterHTTPError:
-                print 'failed to retrieve %s' % item_url
+                print('failed to retrieve %s' % item_url)
         else:
-            print 'skipping %s' % item_url
+            print('skipping %s' % item_url)
