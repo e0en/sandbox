@@ -1,5 +1,5 @@
-from message import Message
-from utf import encode as encode_utf7, decode as decode_utf7
+from gmail.message import Message
+from gmail.utf import encode as encode_utf7, decode as decode_utf7
 
 
 class Mailbox():
@@ -60,7 +60,7 @@ class Mailbox():
         # print search
         response, data = self.gmail.imap.uid('SEARCH', *search)
         if response == 'OK':    
-            uids = filter(None, data[0].split(' ')) # filter out empty strings
+            uids = filter(None, data[0].split(b' ')) # filter out empty strings
 
             for uid in uids:
                 if not self.messages.get(uid):

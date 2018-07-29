@@ -74,14 +74,15 @@ class Message():
 
     def add_label(self, label):
         full_label = '%s' % label
-        self.gmail.imap.uid('STORE', self.uid, '+X-GM-LABELS', full_label)
-        if full_label not in self.labels: self.labels.append(full_label)
+        self.gmail.imap.store(self.uid, full_label, '+X-GM-LABELS')
+        if full_label not in self.labels:
+            self.labels.append(full_label)
 
     def remove_label(self, label):
         full_label = '%s' % label
-        self.gmail.imap.uid('STORE', self.uid, '-X-GM-LABELS', full_label)
-        if full_label in self.labels: self.labels.remove(full_label)
-
+        self.gmail.imap.store(self.uid.decode('utf-8'), '-X-GM-LABELS', full_label)
+        if full_label in self.labels:
+            self.labels.remove(full_label)
 
     def is_deleted(self):
         return ('\\Deleted' in self.flags)
@@ -106,8 +107,6 @@ class Message():
         if name not in ['[Gmail]/Bin', '[Gmail]/Trash']:
             self.delete()
 
-
-
     def archive(self):
         self.move_to('[Gmail]/All Mail')
 
@@ -118,24 +117,24 @@ class Message():
         return hdrs
 
     def parse_flags(self, headers):
-        return list(ParseFlags(headers))
+        return list(ParseFlags(headers.encode('utf-8')))
         # flags = re.search(r'FLAGS \(([^\)]*)\)', headers).groups(1)[0].split(' ')
 
     def parse_labels(self, headers):
         if re.search(r'X-GM-LABELS \(([^\)]+)\)', headers):
             labels = re.search(r'X-GM-LABELS \(([^\)]+)\)', headers).groups(1)[0].split(' ')
-            return map(lambda l: l.replace('"', '').decode("string_escape"), labels)
+            return list(map(lambda l: l.replace('"', '').encode('utf-8').decode('unicode_escape'), labels))
         else:
             return list()
 
     def parse_subject(self, encoded_subject):
         dh = decode_header(encoded_subject)
         default_charset = 'ASCII'
-        return ''.join([ unicode(t[0], t[1] or default_charset) for t in dh ])
+        return ''.join([t[0].decode(t[1] or default_charset) for t in dh])
 
     def parse(self, raw_message):
-        raw_headers = raw_message[0]
-        raw_email = raw_message[1]
+        raw_headers = raw_message[0].decode('utf-8')
+        raw_email = raw_message[1].decode('utf-8')
 
         self.message = email.message_from_string(raw_email)
         self.headers = self.parse_headers(self.message)
@@ -158,7 +157,6 @@ class Message():
         self.sent_at = datetime.datetime.fromtimestamp(time.mktime(email.utils.parsedate_tz(self.message['date'])[:9]))
 
         self.flags = self.parse_flags(raw_headers)
-
         self.labels = self.parse_labels(raw_headers)
 
         if re.search(r'X-GM-THRID (\d+)', raw_headers):
@@ -170,14 +168,13 @@ class Message():
         # Parse attachments into attachment objects array for this message
         self.attachments = [
             Attachment(attachment) for attachment in self.message._payload
-                if not isinstance(attachment, basestring) and attachment.get('Content-Disposition') is not None
+                if not isinstance(attachment, str) and attachment.get('Content-Disposition') is not None
         ]
         
 
     def fetch(self):
         if not self.message:
             response, results = self.gmail.imap.uid('FETCH', self.uid, '(BODY.PEEK[] FLAGS X-GM-THRID X-GM-MSGID X-GM-LABELS)')
-
             self.parse(results[0])
 
         return self.message

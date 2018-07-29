@@ -5,36 +5,49 @@ import os
 import time
 import datetime
 import re
-import mechanize
-import private
+import mechanicalsoup
+import private.keys as private
 
 
 def get_delivery_point_urls(content):
     # extract delivery point hyperlink from the email content
-    link_pattern = 'href="(https+://www.funshop.co.kr/member/login[^"]+)"'
+    link_pattern = b'href="(https+://www.funshop.co.kr/member/login[^"]+)"'
     link_pattern = re.compile(link_pattern)
+    url = None
     for link_match in link_pattern.finditer(content):
         url = link_match.group(1)
     return url
 
 
 def get_delivery_point(url):
-    browser = mechanize.Browser()
+    browser = mechanicalsoup.StatefulBrowser()
+    browser.set_verbose(2)
+    browser.set_debug(True)
     # open the hyperlink
-    browser.open(url)
+    resp = browser.open(url)
+    browser.add_soup(resp, soup_config={'features': 'lxml'})
+    soup = resp.soup
 
     # log-in to funshop
-    for i_form, form in enumerate(browser.forms()):
+    for i_form, form in enumerate(soup.select('form')):
         if form.attrs['id'].lower() == 'frmlogin':
+            form_id = form.attrs['id']
             break
-    browser.select_form(nr=i_form)
-    browser['Account'] = 'e0en'
-    browser['Password'] = private.FUNSHOP_PASSWORD
-    browser.submit()
+    form = browser.select_form(selector='#' + form_id)
+    print(f'chose form {form_id}')
 
+    form['Account'] = 'e0en'
+    form['Password'] = private.FUNSHOP_PASSWORD
+    submit_button = soup.select('#btnSubmit')[0]
+    form.choose_submit(submit_button)
+    print(f'chose submit button {submit_button}')
+
+    browser.submit_selected()
     # check if the process was succeeded
     success_url = 'https://www.funshop.co.kr/myfunroom/artpoint'
-    return browser.geturl().startswith(success_url)
+    p = browser.get_current_page()
+    print(browser.get_url())
+    return browser.get_url().startswith(success_url)
 
 
 if __name__ == '__main__':
@@ -52,13 +65,20 @@ if __name__ == '__main__':
         m.fetch()
         content = m.message.get_payload(decode=True)
         url = get_delivery_point_urls(content)
-        is_success = get_delivery_point(url)
+        if url is None:
+            print('No point button on this email')
+            is_success = True
+        else:
+            is_success = get_delivery_point(url)
         with open(filename, 'a') as fp:
             fp.write('%s: %s\n' % (datetime.datetime.now().isoformat(), is_success))
         if is_success:
+            print('success!')
             m.read()
             m.archive()
-            m.remove_label("\\\\Important")
+            m.remove_label("\\Important")
+        else:
+            print('failed!')
     if len(mails) == 0:
         with open(filename, 'a') as fp:
             fp.write('%s: no mail\n' % datetime.datetime.now().isoformat())

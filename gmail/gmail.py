@@ -1,9 +1,9 @@
 import re
 import imaplib
 
-from mailbox import Mailbox
-from utf import encode as encode_utf7, decode as decode_utf7
-from exceptions import *
+from gmail.mailbox import Mailbox
+from gmail.utf import encode as encode_utf7, decode as decode_utf7
+from gmail.exceptions import *
 
 class Gmail():
     # GMail IMAP defaults
@@ -12,7 +12,7 @@ class Gmail():
 
     # GMail SMTP defaults
     # TODO: implement SMTP functions
-    GMAIL_SMTP_HOST = "smtp.gmail.com"
+    GMAIL_SMTP_HOST = 'smtp.gmail.com'
     GMAIL_SMTP_PORT = 587
 
     def __init__(self):
@@ -53,7 +53,9 @@ class Gmail():
         response, mailbox_list = self.imap.list()
         if response == 'OK':
             for mailbox in mailbox_list:
-                mailbox_name = mailbox.split('"/"')[-1].replace('"', '').strip()
+                b = mailbox.decode('utf-8')
+                mailbox_name = b.split('"/"')[-1].replace('"', '').strip()
+                mailbox_name = mailbox_name.encode('utf-8')
                 mailbox = Mailbox(self)
                 mailbox.external_name = mailbox_name
                 self.mailboxes[mailbox_name] = mailbox
@@ -88,8 +90,6 @@ class Gmail():
             self.imap.delete(mailbox_name)
             del self.mailboxes[mailbox_name]
 
-
-
     def login(self, username, password):
         self.username = username
         self.password = password
@@ -104,9 +104,6 @@ class Gmail():
                 self.fetch_mailboxes()
         except imaplib.IMAP4.error:
             raise AuthenticationError
-
-
-        # smtp_login(username, password)
 
         return self.logged_in
 
@@ -132,19 +129,18 @@ class Gmail():
         self.imap.logout()
         self.logged_in = False
 
-
     def label(self, label_name):
         return self.mailbox(label_name)
 
-    def find(self, mailbox_name="[Gmail]/All Mail", **kwargs):
+    def find(self, mailbox_name=b'[Gmail]/All Mail', **kwargs):
         box = self.mailbox(mailbox_name)
         return box.mail(**kwargs)
 
-    
     def copy(self, uid, to_mailbox, from_mailbox=None):
         if from_mailbox:
             self.use_mailbox(from_mailbox)
-        self.imap.uid('COPY', uid, to_mailbox)
+        to_mailbox = b'"' + to_mailbox.encode('utf-8') + b'"'
+        self.imap.copy(uid, to_mailbox)
 
     def fetch_multiple_messages(self, messages):
         fetch_str =  ','.join(messages.keys())
@@ -165,22 +161,22 @@ class Gmail():
         return keys
 
     def inbox(self):
-        return self.mailbox("INBOX")
+        return self.mailbox(b'INBOX')
 
     def spam(self):
-        return self.mailbox("[Gmail]/Spam")
+        return self.mailbox(b'[Gmail]/Spam')
 
     def starred(self):
-        return self.mailbox("[Gmail]/Starred")
+        return self.mailbox(b'[Gmail]/Starred')
 
     def all_mail(self):
-        return self.mailbox("[Gmail]/All Mail")
+        return self.mailbox(b'[Gmail]/All Mail')
 
     def sent_mail(self):
-        return self.mailbox("[Gmail]/Sent Mail")
+        return self.mailbox(b'[Gmail]/Sent Mail')
 
     def important(self):
-        return self.mailbox("[Gmail]/Important")
+        return self.mailbox(b'[Gmail]/Important')
 
     def mail_domain(self):
         return self.username.split('@')[-1]
