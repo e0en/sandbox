@@ -44,10 +44,15 @@ def get_delivery_point(url):
 
     browser.submit_selected()
     # check if the process was succeeded
-    success_url = 'https://www.funshop.co.kr/myfunroom/artpoint'
+    success_urls = [
+            'https://www.funshop.co.kr/myfunroom/artpoint',
+            'https://www.funshop.co.kr/goods/savedpoint']
     p = browser.get_current_page()
-    print(browser.get_url())
-    return browser.get_url().startswith(success_url)
+    browser_url = browser.get_url()
+    for url in success_urls:
+        if browser_url.startswith(url):
+            return True
+    return False
 
 
 if __name__ == '__main__':
