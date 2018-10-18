@@ -1,0 +1,9 @@
+beautifulsoup4
+certifi
+chardet
+idna
+lxml
+MechanicalSoup
+requests
+six
+urllib3
