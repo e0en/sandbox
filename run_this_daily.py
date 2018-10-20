@@ -20,10 +20,10 @@ def clean_python_codes(root_dir, exclude_list):
             for filename in files:
                 file_path = pipes.quote(os.path.join(root, filename))
                 if file_path.endswith('.py'):
-                    print file_path
+                    print(file_path)
                     os.system('autopep8 -i %s' % file_path)
                 elif file_path.endswith('.pyc'):
-                    print file_path
+                    print(file_path)
                     os.system('rm %s' % file_path)
 
 
